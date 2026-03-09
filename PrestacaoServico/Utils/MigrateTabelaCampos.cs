@@ -28,11 +28,12 @@ namespace PrestacaoServico
                     int RetVal = oUserTable.Add();
                     if (RetVal != 0)
                     {
-                        System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserTable);
                         Executar.Company.GetLastError(out ErrCode, out ErrMsg);
                         Executar.Application.MessageBox($"Erro ao criar a tabela {NomeTabela} no SAP: {ErrMsg}");
                     }
+                    ReleaseComObject(oUserTable);
                 }
+
             }
             catch (Exception ex)
             {
@@ -86,6 +87,8 @@ namespace PrestacaoServico
                         string err = $"Erro ao tentar criar campo: {Executar.Company.GetLastErrorDescription()}.";
                         Executar.Application.MessageBox(err);
                     }
+
+                    ReleaseComObject(userFields);
                 }
             }
             catch (Exception ex)
@@ -93,6 +96,62 @@ namespace PrestacaoServico
                 Executar.Application.MessageBox($"Erro ao criar Campo: {ex.Message}.");
             }
 
+        }
+
+        public static void CriarUDO(string nomeUdo, string MenuUID, BoUDOObjType tipoTabela, List<string> tabelaFilha = null)
+        {
+            try
+            {
+                UserObjectsMD udo = Executar.Company.GetBusinessObject(BoObjectTypes.oUserObjectsMD) as UserObjectsMD;
+
+                udo = Executar.Company.GetBusinessObject(BoObjectTypes.oUserObjectsMD) as UserObjectsMD;
+                udo.GetByKey(nomeUdo);
+
+                if (udo.Code == "")
+                {
+                    udo.Code = nomeUdo;
+                    udo.TableName = nomeUdo;
+                    udo.CanFind = BoYesNoEnum.tYES;
+                    udo.CanApprove = BoYesNoEnum.tYES;
+                    udo.CanCancel = BoYesNoEnum.tYES;
+                    udo.CanClose = BoYesNoEnum.tYES;
+                    udo.CanLog = BoYesNoEnum.tYES;
+                    udo.Name = nomeUdo;
+                    udo.MenuUID = MenuUID;
+                    udo.ObjectType = tipoTabela;
+
+                    if (tabelaFilha != null)
+                    {
+                        foreach (var filha in tabelaFilha)
+                        {
+                            udo.ChildTables.Add();
+                            udo.ChildTables.ObjectName = filha;
+                            udo.ChildTables.TableName = filha;
+                        }
+                    }
+
+                    if (udo.Add() != 0)
+                    {
+                        string err = $"Erro ao tentar criar UDO: {Executar.Company.GetLastErrorDescription()}.";
+                        Executar.Application.MessageBox(err);
+                    }
+
+                    ReleaseComObject(udo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Executar.Application.MessageBox($"Erro ao criar Udo: {ex.Message}.");
+            }
+        }
+
+
+        public static void ReleaseComObject(object obj)
+        {
+            System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         public class ValidValuesMD

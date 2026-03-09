@@ -61,7 +61,6 @@ namespace PrestacaoServico
             try
             {
 
-
                 MigrateTabelaCampos.CriarTabela("ACO_SERVICO", "Serviços", BoUTBTableType.bott_Document);
                 MigrateTabelaCampos.CriarTabela("ACO_SERVICO_1", "Serviços 1", BoUTBTableType.bott_DocumentLines);
                 MigrateTabelaCampos.CriarTabela("ACO_SERVICO_2", "Serviços 2", BoUTBTableType.bott_DocumentLines);
@@ -79,6 +78,9 @@ namespace PrestacaoServico
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO_2", "Descricao", "Descrição", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 20);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO_2", "Valor", "Valor", BoFieldTypes.db_Float, BoFldSubTypes.st_Price);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO_2", "Tipo", "Tipo", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 1);
+
+                List<string> Filhas = new List<string>() { "ACO_SERVICO_1", "ACO_SERVICO_2" };
+                MigrateTabelaCampos.CriarUDO("ACO_SERVICO", "ACO_SERVICO", BoUDOObjType.boud_Document, Filhas);
             }
             catch (Exception ex)
             {
