@@ -34,6 +34,8 @@ namespace PrestacaoServico
 
                 //Grids
                 DBDataSource db0 = (DBDataSource)form.DataSources.DBDataSources.Item("@ACO_SERVICO");
+
+                carregarGridMateriais(form);
                 carregarGridTarefas(form);
 
                 Executar.Application.StatusBar.SetText("Tela iniciada", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Success);
@@ -43,40 +45,49 @@ namespace PrestacaoServico
                 Executar.Application.MessageBox($"Erro ao criar Exibir Form: {ex.Message}.");
             }
         }
-        private void carregarGridMateriais(Form form, string DocEntry)
+        private void carregarGridMateriais(Form form, string DocEntry = null)
         {
             try
             {
-                Recordset ds = (Recordset)Executar.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
-                string consulta = $@"SELECT * FROM ""@ACO_SERVICO_1"" WHERE ""DocEntry"" = {DocEntry}";
-                ds.DoQuery(consulta);
-
-                SAPbouiCOM.DataTable tb = (SAPbouiCOM.DataTable)form.DataSources.DataTables.Item("DT_Mat");
-
-                tb.Rows.Clear();
-
-                if (ds.RecordCount > 0)
+                if (!string.IsNullOrEmpty(DocEntry))
                 {
-                    while (!ds.EoF)
+                    Recordset ds = (Recordset)Executar.Company.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset);
+                    string consulta = $@"SELECT * FROM ""@ACO_SERVICO_1"" WHERE ""DocEntry"" = {DocEntry}";
+                    ds.DoQuery(consulta);
+
+                    SAPbouiCOM.DataTable tb = (SAPbouiCOM.DataTable)form.DataSources.DataTables.Item("DT_Mat");
+
+                    tb.Rows.Clear();
+
+                    if (ds.RecordCount > 0)
                     {
+                        while (!ds.EoF)
+                        {
 
-                        tb.Rows.Add();
-                        string LineId = ds.Fields.Item("LineId").Value.ToString();
-                        tb.SetValue("LineId", tb.Rows.Count - 1, LineId);
+                            tb.Rows.Add();
+                            string LineId = ds.Fields.Item("LineId").Value.ToString();
+                            tb.SetValue("LineId", tb.Rows.Count - 1, LineId);
+                            
 
-                        string Item = ds.Fields.Item("U_Item").Value.ToString();
-                        tb.SetValue("U_Item", tb.Rows.Count - 1, Item);
+                            string Item = ds.Fields.Item("U_Item").Value.ToString();
+                            tb.SetValue("U_Item", tb.Rows.Count - 1, Item);
 
-                        string Quantidade = ds.Fields.Item("U_Quantidade").Value.ToString();
-                        tb.SetValue("U_Quantidade", tb.Rows.Count - 1, Quantidade);
+                            string Quantidade = ds.Fields.Item("U_Quantidade").Value.ToString();
+                            tb.SetValue("U_Quantidade", tb.Rows.Count - 1, Quantidade);
 
-                        string Deposito = ds.Fields.Item("U_Deposito").Value.ToString();
-                        tb.SetValue("U_Deposito", tb.Rows.Count - 1, Deposito);
+                            string Deposito = ds.Fields.Item("U_Deposito").Value.ToString();
+                            tb.SetValue("U_Deposito", tb.Rows.Count - 1, Deposito);
 
-                        ds.MoveNext();
+                            ds.MoveNext();
 
+                        }
                     }
+
+                    //Usando carregamento de dados na Matrix pecorrendo o Recordset
                 }
+
+                Grid grd = form.Items.Item("grdMat").Specific;
+                grd.AutoResizeColumns();
             }
             catch (Exception ex)
             {
@@ -88,6 +99,7 @@ namespace PrestacaoServico
             try
             {
 
+                //Carregar Valores
                 SAPbouiCOM.DataTable tb = (SAPbouiCOM.DataTable)form.DataSources.DataTables.Item("tbTarefa");
                 string consulta = $@"SELECT 
                                     ""U_Descricao"",
@@ -96,12 +108,16 @@ namespace PrestacaoServico
                                     FROM ""@ACO_SERVICO_2"" WHERE ""DocEntry"" = '{DocEntry}'";
                 tb.ExecuteQuery(consulta);
 
+                //Usando carregando de dados na matrix direto no DataTable
 
+
+                //------------------------------ Exemplo em que a Grid é criada pelo código ---------------------------
                 //Formatar nome colunas
                 Grid grd = form.Items.Item("grdTarefa").Specific;
                 grd.Columns.Item("U_Descricao").TitleObject.Caption = "Descrição";
                 grd.Columns.Item("U_Valor").TitleObject.Caption = "Valor";
                 grd.Columns.Item("U_Tipo").TitleObject.Caption = "Tipo";
+
 
                 //Valores ComboBox
                 grd.Columns.Item("U_Tipo").Type = BoGridColumnType.gct_ComboBox;
@@ -109,6 +125,9 @@ namespace PrestacaoServico
                 oComboColumn.DisplayType = BoComboDisplayType.cdt_Description;
                 oComboColumn.ValidValues.Add("P", "Planejado");
                 oComboColumn.ValidValues.Add("I", "Imprevisto");
+                //------------------------------------------------------------------------------------------------------
+
+                grd.AutoResizeColumns();
             }
             catch (Exception ex)
             {
@@ -157,7 +176,7 @@ namespace PrestacaoServico
             }
             catch (Exception)
             {
-                throw;
+                throw; 
             }
         }
         private bool Validacao(Form form)
@@ -177,6 +196,7 @@ namespace PrestacaoServico
                         string Item = ds.Fields.Item("U_Item").Value.ToString();
                         double Quantidade = ds.Fields.Item("U_Quantidade").Value;
                         string Deposito = ds.Fields.Item("U_Deposito").Value.ToString();
+
                         if (string.IsNullOrEmpty(Item))
                         {
                             Executar.Application.MessageBox($"O campo Item está vazio na linha {i}!");
@@ -240,6 +260,7 @@ namespace PrestacaoServico
                     Documents saida = Executar.Company.GetBusinessObject(BoObjectTypes.oInventoryGenExit);
                     saida.Comments = $"Baseado na Prestação de Serviço nº {DocEntry}";
                     saida.DocDate = DateTime.Today;
+                    saida.BPL_IDAssignedToInvoice = Convert.ToInt32(db0.GetValue("U_FilialMat", 0));
 
                     while (!ds.EoF)
                     {
@@ -279,12 +300,9 @@ namespace PrestacaoServico
 
                 Executar.Application.StatusBar.SetText("Realizando Lançamento Contábil...", BoMessageTime.bmt_Short, BoStatusBarMessageType.smt_Warning);
 
-                string consultaPN = $@"SELECT * FROM ""@ACO_SERVICO"" WHERE ""DocEntry"" = '{DocEntry}'";
-                ds.DoQuery(consultaPN);
-                string Pn = ds.Fields.Item("U_Cliente").Value.ToString();
-
+                string Pn = db0.GetValue("U_Cliente", 0);
                 string ContaCredito = Pn; //PN
-                string ContaDebito = "3.01.01.01.08"; //Conta serviço
+                string ContaDebito = db0.GetValue("U_ContaTaref", 0); //Conta serviço
 
                 string consultaTarefas = $@"SELECT * FROM ""@ACO_SERVICO_2"" WHERE ""DocEntry"" = '{DocEntry}'";
                 ds.DoQuery(consultaTarefas);
@@ -305,8 +323,8 @@ namespace PrestacaoServico
 
 
                 #region Lançamento de Credito
+                jEventos.Lines.BPLID = Convert.ToInt32(db0.GetValue("U_FilialTaref", 0)); ;
                 jEventos.Lines.ShortName = ContaCredito;
-                //jEventos.Lines.AccountCode = ContaCredito;
                 jEventos.Lines.Credit = CustoTotal;
                 jEventos.Lines.Debit = 0;
                 jEventos.Lines.TaxDate = DateTime.Now;
@@ -316,8 +334,8 @@ namespace PrestacaoServico
                 #endregion
 
                 #region Lançamento de Debito
+                jEventos.Lines.BPLID = Convert.ToInt32(db0.GetValue("U_FilialTaref", 0)); ;
                 jEventos.Lines.ShortName = ContaDebito;
-                //jEventos.Lines.AccountCode = ContaDebito;
                 jEventos.Lines.Credit = 0;
                 jEventos.Lines.Debit = CustoTotal;
                 jEventos.Lines.TaxDate = DateTime.Now;
@@ -345,7 +363,7 @@ namespace PrestacaoServico
 
                 #endregion
 
-                #region Fechar o serviço
+                #region Atualizar status do serviço para Fechado
                 CompanyService oCompanyService = (CompanyService)Executar.Company.GetCompanyService();
                 GeneralService oGeneralService = (GeneralService)oCompanyService.GetGeneralService("ACO_SERVICO");
                 GeneralDataParams oGeneralParams = (GeneralDataParams)oGeneralService.GetDataInterface(GeneralServiceDataInterfaces.gsGeneralDataParams);
@@ -380,6 +398,9 @@ namespace PrestacaoServico
                     form.Items.Item("Item_21").Enabled = false;
                     form.Items.Item("Item_22").Enabled = false;
                     form.Items.Item("Item_16").Enabled = false;
+                    form.Items.Item("Item_6").Enabled = false;
+                    form.Items.Item("Item_30").Enabled = false;
+                    form.Items.Item("Item_23").Enabled = false;
                     form.Items.Item("grdMat").Enabled = false;
                     form.Items.Item("grdTarefa").Enabled = false;
                 }
@@ -392,6 +413,9 @@ namespace PrestacaoServico
                     form.Items.Item("Item_21").Enabled = true;
                     form.Items.Item("Item_22").Enabled = true;
                     form.Items.Item("Item_16").Enabled = true;
+                    form.Items.Item("Item_6").Enabled = true;
+                    form.Items.Item("Item_30").Enabled = true;
+                    form.Items.Item("Item_23").Enabled = true;
                     form.Items.Item("grdMat").Enabled = true;
                     form.Items.Item("grdTarefa").Enabled = true;
                 }
@@ -402,6 +426,7 @@ namespace PrestacaoServico
                 throw;
             }
         }
+
         #region Eventos de Formulario
         public void RightClickEventSv(SAPbouiCOM.ContextMenuInfo info, out bool BubbleEvent)
         {
@@ -536,7 +561,22 @@ namespace PrestacaoServico
 
                         if (pVal.ItemUID == "Item_3")
                         {
-                            db0.SetValue("U_Funcionario", 0, ecfl.SelectedObjects.GetValue("Code", 0).ToString());
+                            db0.SetValue("U_Funcionario", 0, ecfl.SelectedObjects.GetValue("firstName", 0).ToString());
+                        }
+
+                        if (pVal.ItemUID == "Item_6")
+                        {
+                            db0.SetValue("U_FilialMat", 0, ecfl.SelectedObjects.GetValue("BPLId", 0).ToString());
+                        }
+
+                        if (pVal.ItemUID == "Item_30")
+                        {
+                            db0.SetValue("U_FilialTaref", 0, ecfl.SelectedObjects.GetValue("BPLId", 0).ToString());
+                        }
+
+                        if (pVal.ItemUID == "Item_23")
+                        {
+                            db0.SetValue("U_ContaTaref", 0, ecfl.SelectedObjects.GetValue("AcctCode", 0).ToString());
                         }
 
                         if (pVal.ItemUID == "grdMat")
@@ -550,11 +590,11 @@ namespace PrestacaoServico
                             {
                                 tb.SetValue("U_Deposito", pVal.Row, ecfl.SelectedObjects.GetValue("WhsCode", 0).ToString());
                             }
+                        }
 
-                            if (form.Mode != BoFormMode.fm_ADD_MODE)
-                            {
-                                form.Mode = BoFormMode.fm_UPDATE_MODE;
-                            }
+                        if (form.Mode != BoFormMode.fm_ADD_MODE)
+                        {
+                            form.Mode = BoFormMode.fm_UPDATE_MODE;
                         }
                     }
                 }
@@ -592,6 +632,7 @@ namespace PrestacaoServico
                     {
                         SAPbouiCOM.DataTable tb = (SAPbouiCOM.DataTable)form.DataSources.DataTables.Item("DT_Mat");
                         tb.Rows.Add();
+                        
                     }
                     if (!menuEvent.BeforeAction && menuEvent.MenuUID == "mnuRemove")
                     {
@@ -606,9 +647,18 @@ namespace PrestacaoServico
                     if (!menuEvent.BeforeAction && menuEvent.MenuUID == "mnuAdd")
                     {
                         SAPbouiCOM.DataTable tb = (SAPbouiCOM.DataTable)form.DataSources.DataTables.Item("tbTarefa");
-                        tb.Rows.Add();
+                        int linhas = tb.Rows.Count;
 
-                        tb.SetValue("U_Tipo", tb.Rows.Count - 1, "P");
+                        if (string.IsNullOrEmpty(tb.GetValue("U_Tipo", tb.Rows.Count-1)))
+                        {
+                            tb.SetValue("U_Tipo", tb.Rows.Count-1, "P");
+                        }
+                        else
+                        {
+                            tb.Rows.Add();
+                            tb.SetValue("U_Tipo", tb.Rows.Count - 1, "P");
+                        }
+                           
                     }
                     if (!menuEvent.BeforeAction && menuEvent.MenuUID == "mnuRemove")
                     {
@@ -623,6 +673,7 @@ namespace PrestacaoServico
                 throw;
             }
         }
+
         #endregion
 
     }

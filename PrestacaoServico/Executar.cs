@@ -72,6 +72,9 @@ namespace PrestacaoServico
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO", "Prioridade", "Prioridade", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 1);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO", "SM", "Saida de Mercadoria", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 10);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO", "LCM", "Lançamento Contabil", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 10);
+                MigrateTabelaCampos.CriarCampos("@ACO_SERVICO", "FilialMat", "Filial SM", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 5);
+                MigrateTabelaCampos.CriarCampos("@ACO_SERVICO", "FilialTaref", "Filial LCM", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 5);
+                MigrateTabelaCampos.CriarCampos("@ACO_SERVICO", "ContaTaref", "Conta débito LM", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 30);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO_1", "Item", "Item", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 50);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO_1", "Quantidade", "Quantidade", BoFieldTypes.db_Float, BoFldSubTypes.st_Quantity);
                 MigrateTabelaCampos.CriarCampos("@ACO_SERVICO_1", "Deposito", "Deposito", BoFieldTypes.db_Alpha, BoFldSubTypes.st_None, 20);

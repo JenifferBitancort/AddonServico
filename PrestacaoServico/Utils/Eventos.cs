@@ -40,30 +40,6 @@ namespace PrestacaoServico
         }
 
 
-        //private void SetApplication()
-        //{
-        //    SAPbouiCOM.SboGuiApi SboGuiApi = new SAPbouiCOM.SboGuiApi();
-
-        //    string sConnectionString = System.Convert.ToString("0030002C0030002C00530041005000420044005F00440061007400650076002C0050004C006F006D0056004900490056");
-
-        //    SboGuiApi.Connect(sConnectionString);
-        //    Application = SboGuiApi.GetApplication(-1);
-        //}
-
-
-        //private void CompanyConnection()
-        //{
-        //    try
-        //    {
-        //        Company = (SAPbobsCOM.Company)Application.Company.GetDICompany();
-        //    }
-        //    catch
-        //    {
-        //        Application.StatusBar.SetText(Company.GetLastErrorDescription(), SAPbouiCOM.BoMessageTime.bmt_Short, SAPbouiCOM.BoStatusBarMessageType.smt_Error);
-        //    }
-        //}
-
-
         private void SBO_Application_MenuEvent(ref SAPbouiCOM.MenuEvent menuEvent, out bool BubbleEvent)
 
         {
